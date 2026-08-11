@@ -19,10 +19,11 @@ SAMPLE_TRANSLATIONS = {
 async def translate_text(text: str, source_lang: str, target_lang: str) -> str:
     if source_lang == target_lang:
         return text
-    # Mock: In production, call Bhashini API
+    # TODO: Integrate real Bhashini API for translation.
     # POST https://dhruva-api.bhashini.gov.in/services/inference/pipeline
-    # With pipeline config for translation
-    return f"[{target_lang.upper()}] {text}"
+    # With pipeline config for translation.
+    # Until then, return the original text unchanged so users see correct content.
+    return text
 
 
 async def detect_language(text: str) -> str:

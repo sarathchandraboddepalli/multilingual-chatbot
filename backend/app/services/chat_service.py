@@ -1,4 +1,5 @@
 import anthropic
+import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.conversation import Conversation
@@ -8,6 +9,10 @@ from app.services.rag_service import get_context_for_query, search_schemes
 from app.services.translation_service import detect_language, translate_text
 from app.config import settings
 import uuid
+
+logger = logging.getLogger(__name__)
+
+client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
 SYSTEM_PROMPT = """You are a helpful government services assistant for Andhra Pradesh and India.
 You help citizens understand government schemes, check eligibility, and learn how to apply.
@@ -61,8 +66,7 @@ Please answer the user's question based on the scheme information above."""
     messages_for_api.append({"role": "user", "content": user_content})
 
     try:
-        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-        response = client.messages.create(
+        response = await client.messages.create(
             model="claude-haiku-4-5-20250514",
             max_tokens=500,
             system=SYSTEM_PROMPT,
@@ -70,6 +74,7 @@ Please answer the user's question based on the scheme information above."""
         )
         assistant_reply = response.content[0].text
     except Exception:
+        logger.exception("Anthropic API call failed")
         assistant_reply = f"I found information about: {scheme_referenced or 'government schemes'}. {context[:300] if context else 'Please contact your local government office for more details.'}"
 
     if language != "en":
